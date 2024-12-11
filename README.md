@@ -5,7 +5,7 @@
 ## Contacts
 st108255@student.spbu.ru
 ## Description
-Lab1 - rotates bmp file left and right, applies gaussian filter <br />
+Lab1 - rotates bmp file **my_file.bmp** left and right, applies gaussian filter <br />
 For **level A** - monochrome 8-bit image
 
 ## Build
