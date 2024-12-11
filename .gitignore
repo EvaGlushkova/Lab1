@@ -7,6 +7,8 @@
 *.o
 *.obj
 
+Lab1
+
 # Precompiled Headers
 *.gch
 *.pch
