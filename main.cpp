@@ -16,13 +16,36 @@ int main()
     const char gauss[] = "gaussian.bmp";
 
 
-    if (Clock90_and_Gaussian(my_file, left90Clock, right90Clock, gauss))
+    BMPfile bmp = loadfile(my_file);
+
+    if (LeftClock90(bmp, left90Clock))
     {
-        std::cout << "Left90Clock, Right90Clock and Gauss is done!" << "\n";
+        std::cout << "Left90Clock is done!" << "\n";
     }
+
     else
     {
-        std::cerr << "Error Clock90_and_Gaussian" << "\n";
+        std::cerr << "Error LeftClock90" << "\n";
+    }
+
+    if (RightClock90(bmp, right90Clock))
+    {
+        std::cout << "RightClock90 is done!" << "\n";
+    }
+
+    else
+    {
+        std::cerr << "Error RightClock90" << "\n";
+    }
+
+    if (Gauss(bmp, gauss))
+    {
+        std::cout << "Gauss is done!" << "\n";
+    }
+
+    else
+    {
+        std::cerr << "Error Gauss" << "\n";
     }
 
 

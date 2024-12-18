@@ -9,33 +9,148 @@
 #include <cmath>
 
 
-bool Clock90_and_Gaussian(const char *file_name, const char *left, const char *right, const char *gauss)
+BMPfile loadfile(const char *file_name)
 {
-
     std::ifstream original_file(file_name, std::ios::binary);
-
     if (!original_file)
     {
-        std::cerr << "Error opening the first file" << std::endl;
-        return false;
+        std::cout << "Error opening the first file" << "\n";
+        exit(1);
     }
 
+    BMPfile bmp;
+
+    original_file.read(reinterpret_cast<char*>(&bmp.BitMapFileHeader), sizeof(BITMAPFILEHEADER));
+    original_file.read(reinterpret_cast<char*>(&bmp.BitMapInfo), sizeof(BITMAPINFO));
+
+    if (bmp.BitMapInfo.bitcount != 8)
+    {
+        std::cout<<bmp.BitMapInfo.bitcount<< " bits" <<  "\n";
+        std::cerr << "NOT 8 bit" << "\n";
+        original_file.close();
+        exit(1);
+    }
+
+    bmp.pix.resize(bmp.BitMapInfo.colors);
+
+
+    original_file.seekg(bmp.BitMapFileHeader.bfOffBits - sizeof(RGB) * bmp.BitMapInfo.colors);
+    original_file.read(reinterpret_cast<char*>(bmp.pix.data()), sizeof(RGB) * bmp.BitMapInfo.colors);
+    original_file.seekg(bmp.BitMapFileHeader.bfOffBits);
+
+
+    uint32_t width = bmp.BitMapInfo.width;
+    uint32_t height = bmp.BitMapInfo.height;
+
+    bmp.pic_data.resize(height * width);
+
+    original_file.read(reinterpret_cast<char*>(bmp.pic_data.data()), height * width);
+
+    original_file.close();
+
+    return bmp;
+}
+
+bool LeftClock90(BMPfile& original, const char *left)
+{
     std::ofstream left_clock(left, std::ios::binary);
 
     if (!left_clock)
     {
-        std::cerr << "Error opening the second file" << std::endl;
+        std::cerr << "Error opening the left_clock" << std::endl;
         return false;
     }
 
+    BITMAPFILEHEADER BitMapFileHeader = original.BitMapFileHeader;
+    BITMAPINFO BitMapInfo = original.BitMapInfo;
+
+    uint32_t width = original.BitMapInfo.width;
+    uint32_t height = original.BitMapInfo.height;
+
+    BitMapInfo.width = height;
+    BitMapInfo.height = width;
+
+    left_clock.write(reinterpret_cast<char*>(&BitMapFileHeader), sizeof(BITMAPFILEHEADER));
+    left_clock.write(reinterpret_cast<char*>(&BitMapInfo), sizeof(BITMAPINFO));
+
+
+    left_clock.seekp(BitMapFileHeader.bfOffBits - sizeof(RGB) * BitMapInfo.colors);
+    left_clock.write(reinterpret_cast<char*>(original.pix.data()), sizeof(RGB) * original.pix.size());
+    left_clock.seekp(BitMapFileHeader.bfOffBits);
+
+    std::vector<unsigned char> left90clock(width * height);
+
+    for(int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+
+            left90clock[height * (x + 1) - 1 - y] = original.pic_data[y * width + x]; //(x, y) - pic_data coordinates
+
+
+        }
+    }
+
+
+    left_clock.write(reinterpret_cast<char*>(left90clock.data()), height * width);
+
+    left_clock.close();
+
+    return true;
+
+}
+
+bool RightClock90(BMPfile& original, const char *right)
+{
     std::ofstream right_clock(right, std::ios::binary);
 
     if (!right_clock)
     {
-        std::cerr << "Error opening the third file" << std::endl;
+        std::cerr << "Error opening the RightClock90 file" << std::endl;
         return false;
     }
 
+    BITMAPFILEHEADER BitMapFileHeader = original.BitMapFileHeader;
+    BITMAPINFO BitMapInfo = original.BitMapInfo;
+
+    uint32_t width = original.BitMapInfo.width;
+    uint32_t height = original.BitMapInfo.height;
+
+    BitMapInfo.width = height;
+    BitMapInfo.height = width;
+
+    right_clock.write(reinterpret_cast<char*>(&BitMapFileHeader), sizeof(BITMAPFILEHEADER));
+    right_clock.write(reinterpret_cast<char*>(&BitMapInfo), sizeof(BITMAPINFO));
+
+
+    right_clock.seekp(BitMapFileHeader.bfOffBits - sizeof(RGB) * BitMapInfo.colors);
+    right_clock.write(reinterpret_cast<char*>(original.pix.data()), sizeof(RGB) * original.pix.size());
+    right_clock.seekp(BitMapFileHeader.bfOffBits);
+
+    std::vector<unsigned char> right90clock(width * height);
+
+    for(int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+
+            right90clock[y + height * (width - x - 1) ] = original.pic_data[y * width + x];
+
+
+        }
+    }
+
+
+    right_clock.write(reinterpret_cast<char*>(right90clock.data()), height * width);
+
+    right_clock.close();
+
+    return true;
+
+}
+
+bool Gauss(BMPfile& original, const char *gauss)
+{
     std::ofstream gaussian(gauss, std::ios::binary);
 
     if (!gaussian)
@@ -44,86 +159,28 @@ bool Clock90_and_Gaussian(const char *file_name, const char *left, const char *r
         return false;
     }
 
-    BITMAPFILEHEADER BitMapFileHeader;
-    BITMAPINFO BitMapInfo;
+    BITMAPFILEHEADER BitMapFileHeader = original.BitMapFileHeader;
+    BITMAPINFO BitMapInfo = original.BitMapInfo;
 
-    original_file.read(reinterpret_cast<char*>(&BitMapFileHeader), sizeof(BITMAPFILEHEADER));
-    original_file.read(reinterpret_cast<char*>(&BitMapInfo), sizeof(BITMAPINFO));
+    uint32_t width = original.BitMapInfo.width;
+    uint32_t height = original.BitMapInfo.height;
 
     gaussian.write(reinterpret_cast<char*>(&BitMapFileHeader), sizeof(BITMAPFILEHEADER));
     gaussian.write(reinterpret_cast<char*>(&BitMapInfo), sizeof(BITMAPINFO));
 
-    uint32_t width = BitMapInfo.width;
-    uint32_t height = BitMapInfo.height;
 
-    BitMapInfo.width = height;
-    BitMapInfo.height = width;
-
-    left_clock.write(reinterpret_cast<char*>(&BitMapFileHeader), sizeof(BITMAPFILEHEADER));
-    left_clock.write(reinterpret_cast<char*>(&BitMapInfo), sizeof(BITMAPINFO));
-
-    right_clock.write(reinterpret_cast<char*>(&BitMapFileHeader), sizeof(BITMAPFILEHEADER));
-    right_clock.write(reinterpret_cast<char*>(&BitMapInfo), sizeof(BITMAPINFO));
-
-    BitMapInfo.width = width;
-    BitMapInfo.height = height;
-
-    if (BitMapInfo.bitcount != 8)
-    {
-        std::cout<<BitMapInfo.bitcount<< " bits" <<  "\n";
-        std::cerr << "NOT 8 bit" << "\n";
-
-        return false;
-    }
-
-    std::vector<RGB> pix(BitMapInfo.colors);
-
-    std::vector<unsigned char> pic_data(height * width);
-
-    original_file.seekg(BitMapFileHeader.bfOffBits - sizeof(RGB) * BitMapInfo.colors);
-    original_file.read(reinterpret_cast<char*>(pix.data()), sizeof(RGB) * pix.size());
-    original_file.seekg(BitMapFileHeader.bfOffBits);
-
-    left_clock.seekp(BitMapFileHeader.bfOffBits - sizeof(RGB) * BitMapInfo.colors);
-    left_clock.write(reinterpret_cast<char*>(pix.data()), sizeof(RGB) * pix.size());
-    left_clock.seekp(BitMapFileHeader.bfOffBits);
-
-    right_clock.seekp(BitMapFileHeader.bfOffBits - sizeof(RGB) * BitMapInfo.colors);
-    right_clock.write(reinterpret_cast<char*>(pix.data()), sizeof(RGB) * pix.size());
-    right_clock.seekp(BitMapFileHeader.bfOffBits);
 
     gaussian.seekp(BitMapFileHeader.bfOffBits - sizeof(RGB) * BitMapInfo.colors);
-    gaussian.write(reinterpret_cast<char*>(pix.data()), sizeof(RGB) * pix.size());
+    gaussian.write(reinterpret_cast<char*>(original.pix.data()), sizeof(RGB) * original.pix.size());
     gaussian.seekp(BitMapFileHeader.bfOffBits);
 
+    std::vector<unsigned char> pic_gauss1 =  original.pic_data;
 
-    original_file.read(reinterpret_cast<char*>(pic_data.data()), height * width);
+    std::vector<unsigned char> pic_gauss = pic_Gauss(pic_gauss1, height, width);
 
-    std::vector<unsigned char> left90clock(width * height);
-    std::vector<unsigned char> right90clock(width * height);
-
-    for(int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-
-            left90clock[height * (x + 1) - 1 - y] = pic_data[y * width + x]; //(x, y) - pic_data coordinates
-            right90clock[y + height * (width - x - 1) ] = pic_data[y * width + x];
-
-        }
-    }
-
-
-    left_clock.write(reinterpret_cast<char*>(left90clock.data()), height * width);
-    right_clock.write(reinterpret_cast<char*>(right90clock.data()), height * width);
-
-    std::vector<unsigned char> pic_gauss = pic_Gauss(pic_data, height, width);
 
     gaussian.write(reinterpret_cast<char*>(pic_gauss.data()), height * width);
 
-    original_file.close();
-    left_clock.close();
-    right_clock.close();
     gaussian.close();
 
     return true;

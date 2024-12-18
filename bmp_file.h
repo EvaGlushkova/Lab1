@@ -9,7 +9,10 @@ Lab1 */
 #ifndef BMP_FILE_H
 #define BMP_FILE_H
 
-bool Clock90_and_Gaussian(const char *file_name, const char *left, const char *right, const char *gauss);
+BMPfile loadfile(const char *file_name);
+bool LeftClock90(BMPfile& original, const char *left);
+bool RightClock90(BMPfile& original, const char *right);
+bool Gauss(BMPfile& original, const char *gauss);
 std::vector<unsigned char> pic_Gauss(std::vector<unsigned char>& file, int height, int width);
 
 

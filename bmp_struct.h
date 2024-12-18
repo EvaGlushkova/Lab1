@@ -49,10 +49,10 @@ class BMPfile
 {
 public:
 
-    BITMAPFILEHEADER bitmapheader;
-    BITMAPINFO bitmapinfo;
+    BITMAPFILEHEADER BitMapFileHeader;
+    BITMAPINFO BitMapInfo;
     std::vector<RGB> pix;
-    std::vector<unsigned char> data;  //pixels
+    std::vector<unsigned char> pic_data;  //pixels
 
     BMPfile();
 
