@@ -78,27 +78,31 @@ bool LeftClock90(BMPfile& original, const char *left)
     left_clock.write(reinterpret_cast<char*>(original.pix.data()), sizeof(RGB) * original.pix.size());
     left_clock.seekp(BitMapFileHeader.bfOffBits);
 
-    std::vector<unsigned char> left90clock(width * height);
+    std::vector<unsigned char> left90clock(height);
 
-    for(int y = 0; y < height; ++y)
+    for (int x = 0; x < width; ++x)
     {
-        for (int x = 0; x < width; ++x)
+        for (int y = 0; y < height; ++y)
         {
 
-            left90clock[height * (x + 1) - 1 - y] = original.pic_data[y * width + x]; //(x, y) - pic_data coordinates
-
+            left90clock[y] = original.pic_data[y * width + x];
 
         }
+        for (int y = 0; y < height; ++y)
+        {
+
+            left_clock.put(left90clock[height - y - 1]);
+        }
+
     }
 
-
-    left_clock.write(reinterpret_cast<char*>(left90clock.data()), height * width);
 
     left_clock.close();
 
     return true;
 
 }
+
 
 bool RightClock90(BMPfile& original, const char *right)
 {
@@ -127,21 +131,19 @@ bool RightClock90(BMPfile& original, const char *right)
     right_clock.write(reinterpret_cast<char*>(original.pix.data()), sizeof(RGB) * original.pix.size());
     right_clock.seekp(BitMapFileHeader.bfOffBits);
 
-    std::vector<unsigned char> right90clock(width * height);
+    std::vector<unsigned char> right90clock(height);
 
-    for(int y = 0; y < height; ++y)
+    for (int x = 1; x < width + 1; ++x)
     {
-        for (int x = 0; x < width; ++x)
+        for(int y = 1; y < height; ++y)
         {
 
-            right90clock[y + height * (width - x - 1) ] = original.pic_data[y * width + x];
-
-
+            right90clock[y] = original.pic_data[y * width - x]; //(x, y) - pic_data coordinates
         }
+
+        right_clock.write(reinterpret_cast<char*>(right90clock.data()), height);
     }
 
-
-    right_clock.write(reinterpret_cast<char*>(right90clock.data()), height * width);
 
     right_clock.close();
 
@@ -159,27 +161,19 @@ bool Gauss(BMPfile& original, const char *gauss)
         return false;
     }
 
-    BITMAPFILEHEADER BitMapFileHeader = original.BitMapFileHeader;
-    BITMAPINFO BitMapInfo = original.BitMapInfo;
 
-    uint32_t width = original.BitMapInfo.width;
-    uint32_t height = original.BitMapInfo.height;
+    gaussian.write(reinterpret_cast<char*>(&original.BitMapFileHeader), sizeof(BITMAPFILEHEADER));
+    gaussian.write(reinterpret_cast<char*>(&original.BitMapInfo), sizeof(BITMAPINFO));
 
-    gaussian.write(reinterpret_cast<char*>(&BitMapFileHeader), sizeof(BITMAPFILEHEADER));
-    gaussian.write(reinterpret_cast<char*>(&BitMapInfo), sizeof(BITMAPINFO));
-
-
-
-    gaussian.seekp(BitMapFileHeader.bfOffBits - sizeof(RGB) * BitMapInfo.colors);
+    gaussian.seekp(original.BitMapFileHeader.bfOffBits - sizeof(RGB) * original.BitMapInfo.colors);
     gaussian.write(reinterpret_cast<char*>(original.pix.data()), sizeof(RGB) * original.pix.size());
-    gaussian.seekp(BitMapFileHeader.bfOffBits);
+    gaussian.seekp(original.BitMapFileHeader.bfOffBits);
 
     std::vector<unsigned char> pic_gauss1 =  original.pic_data;
 
-    std::vector<unsigned char> pic_gauss = pic_Gauss(pic_gauss1, height, width);
+    std::vector<unsigned char> pic_gauss = pic_Gauss(pic_gauss1, original.BitMapInfo.height, original.BitMapInfo.width);
 
-
-    gaussian.write(reinterpret_cast<char*>(pic_gauss.data()), height * width);
+    gaussian.write(reinterpret_cast<char*>(pic_gauss.data()), original.BitMapInfo.height * original.BitMapInfo.width);
 
     gaussian.close();
 
