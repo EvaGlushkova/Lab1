@@ -169,9 +169,7 @@ bool Gauss(BMPfile& original, const char *gauss)
     gaussian.write(reinterpret_cast<char*>(original.pix.data()), sizeof(RGB) * original.pix.size());
     gaussian.seekp(original.BitMapFileHeader.bfOffBits);
 
-    std::vector<unsigned char> pic_gauss1 =  original.pic_data;
-
-    std::vector<unsigned char> pic_gauss = pic_Gauss(pic_gauss1, original.BitMapInfo.height, original.BitMapInfo.width);
+    std::vector<unsigned char> pic_gauss = pic_Gauss(original.pic_data, original.BitMapInfo.height, original.BitMapInfo.width);
 
     gaussian.write(reinterpret_cast<char*>(pic_gauss.data()), original.BitMapInfo.height * original.BitMapInfo.width);
 
