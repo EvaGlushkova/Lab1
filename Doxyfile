@@ -1,0 +1,6 @@
+PROJECT_NAME = "Lab1"
+INPUT = bmp parallel
+RECURSIVE = YES
+EXCLUDE = cmake-build-debug test
+GENERATE_HTML = YES
+GENERATE_LATEX = NO

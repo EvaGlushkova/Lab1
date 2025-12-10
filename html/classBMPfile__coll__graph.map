@@ -1,0 +1,5 @@
+<map id="BMPfile" name="BMPfile">
+<area shape="rect" id="node1" title="Container for BMP image data." alt="" coords="98,95,169,121"/>
+<area shape="rect" id="node2" href="$structBITMAPINFO.html" title="BMP information header structure." alt="" coords="5,5,109,32"/>
+<area shape="rect" id="node3" href="$structBITMAPFILEHEADER.html" title="BMP file header structure." alt="" coords="134,5,287,32"/>
+</map>

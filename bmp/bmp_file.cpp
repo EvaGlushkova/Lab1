@@ -1,14 +1,22 @@
+/* Glushkova Eva st108255@student.spbu.ru
+Lab1 */
 #include "bmp_file.h"
 #include <iostream>
-#include <string>
-#include <stdio.h>
 #include <vector>
 #include <stdlib.h>
 #include <fstream>
-#include <algorithm>
 #include <cmath>
 
+/**
+ * @file bmp_file.cpp
+ * @brief Implementation of BMP image processing functions
+ */
 
+/**
+ * @brief Loads a BMP file from disk
+ * @param file_name Path to the BMP file
+ * @return BMPfile structure with image data
+ */
 BMPfile loadfile(const char *file_name)
 {
     std::ifstream original_file(file_name, std::ios::binary);
@@ -50,7 +58,10 @@ BMPfile loadfile(const char *file_name)
 
     return bmp;
 }
-
+/**
+ * @brief Rotates image 90 degrees counter-clockwise
+ * @return True if successful
+ */
 bool LeftClock90(BMPfile& original, const char *left)
 {
     std::ofstream left_clock(left, std::ios::binary);
@@ -102,7 +113,10 @@ bool LeftClock90(BMPfile& original, const char *left)
     return true;
 
 }
-
+/**
+ * @brief Rotates image 90 degrees clockwise
+ * @return True if successful
+ */
 
 bool RightClock90(BMPfile& original, const char *right)
 {
@@ -126,31 +140,26 @@ bool RightClock90(BMPfile& original, const char *right)
     right_clock.write(reinterpret_cast<char*>(&BitMapFileHeader), sizeof(BITMAPFILEHEADER));
     right_clock.write(reinterpret_cast<char*>(&BitMapInfo), sizeof(BITMAPINFO));
 
-
     right_clock.seekp(BitMapFileHeader.bfOffBits - sizeof(RGB) * BitMapInfo.colors);
     right_clock.write(reinterpret_cast<char*>(original.pix.data()), sizeof(RGB) * original.pix.size());
     right_clock.seekp(BitMapFileHeader.bfOffBits);
 
-    std::vector<unsigned char> right90clock(height);
-
-    for (int x = 1; x < width + 1; ++x)
+    for (int x = 0; x < width; ++x)
     {
-        for(int y = 1; y < height; ++y)
+        for (int y = height - 1; y >= 0; --y)
         {
-
-            right90clock[y] = original.pic_data[y * width - x]; //(x, y) - pic_data coordinates
+            unsigned char pixel = original.pic_data[y * width + x];
+            right_clock.put(pixel);
         }
-
-        right_clock.write(reinterpret_cast<char*>(right90clock.data()), height);
     }
 
-
     right_clock.close();
-
     return true;
-
 }
-
+/**
+ * @brief Applies Gaussian filter to image
+ * @return True if successful
+ */
 bool Gauss(BMPfile& original, const char *gauss)
 {
     std::ofstream gaussian(gauss, std::ios::binary);
@@ -179,11 +188,13 @@ bool Gauss(BMPfile& original, const char *gauss)
 
 }
 
-
+/**
+ * @brief Internal Gaussian filter implementation
+ * @return Filtered pixel data
+ */
 std::vector<unsigned char> pic_Gauss(std::vector<unsigned char>& file, int height, int width)
 {
-    double gauss_kernel[5][5] =           // gauss_kernel radius: int(5 / 2) = 2
-    {
+    double gauss_kernel[5][5] = {
         {5, 8, 10, 8, 5},
         {8, 20, 80, 20, 8},
         {10, 80, 120, 80, 10},
@@ -192,48 +203,42 @@ std::vector<unsigned char> pic_Gauss(std::vector<unsigned char>& file, int heigh
     };
 
     double sum_kernel = 0;
-
-
-
-    for (int i = 0; i < 5; ++i)
-    {
-        for (int j = 0; j < 5; ++j)
-        {
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 5; ++j) {
             sum_kernel += gauss_kernel[i][j];
         }
     }
 
-    for (int i = 0; i < 5; ++i)
-    {
-        for (int j = 0; j < 5; ++j)
-        {
-            gauss_kernel[i][j] =  gauss_kernel[i][j] / sum_kernel;    // sum of gauss_kernel elements is 1
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            gauss_kernel[i][j] = gauss_kernel[i][j] / sum_kernel;
         }
     }
 
     std::vector<unsigned char> pic_gauss(height * width);
 
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            
+            if (y < 2  || y >= height - 2 || x < 2 || x >= width - 2) {
+                pic_gauss[x + y * width] = file[x + y * width];
+                continue;
+            }
 
             double pix = 0;
 
-            for (int ker_y = -2; ker_y < 3; ++ker_y)
-            {
-
-                for (int ker_x = -2; ker_x < 3; ++ker_x)
-                {
-
-                    pix += file[width * (y + ker_y) + ker_x + x] * gauss_kernel[2 + ker_y][2 + ker_x];
+            for (int ker_y = -2; ker_y <= 2; ++ker_y) {
+                for (int ker_x = -2; ker_x <= 2; ++ker_x) {
+                    int idx = (y + ker_y) * width + (x + ker_x);
+                    pix += file[idx] * gauss_kernel[ker_y + 2][ker_x + 2];
                 }
             }
 
-            pic_gauss[x + y * width] = static_cast<unsigned char>(pix > 255 ? 255 : (pix < 0 ? 0 : pix));
+            if (pix < 0) pix = 0;
+            if (pix > 255) pix = 255;
+            
+            pic_gauss[x + y * width] = static_cast<unsigned char>(pix);
         }
     }
     return pic_gauss;
-
 }
-
