@@ -1,51 +1,40 @@
-PROJECT = Lab1
 
-LIBPROJECT = $(PROJECT).a
+PROJECT = Lab1
+TEST_PROJECT = test-Lab1
 
 CXX = g++
+CXXFLAGS = -std=c++20 -O3 -pthread -I. -Iparallel
+LDFLAGS = -pthread -lm
 
-A = ar
+SRC = main.cpp \
+      bmp/bmp_file.cpp \
+      bmp/bmp_struct.cpp \
+      parallel/bmp_parallel.cpp
 
-AFLAGS = rsv
+OBJ = $(SRC:.cpp=.o)
+OBJ_NO_MAIN = $(filter-out main.o,$(OBJ))
 
-CCXFLAGS = -I. -std=c++17 -Wall -g -fPIC
+TEST_SRC = tests/test.cpp
+TEST_OBJ = tests/test.o
 
-LDXXFLAGS = $(CCXFLAGS) -L. -l:$(LIBPROJECT)
-
-LDGTESTFLAGS = $(LDXXFLAGS) -lgtest -lgtest_main -lpthread
-
-DEPS = bmp_struct.h bmp_file.h 
-
-OBJ = main.o bmp_file.o bmp_struct.o 
-
-
-.PHONY: default
-
-default: all
-
-%.o: %.cpp $(DEPS)
-	$(CXX) -c -o $@ $< $(CXXFLAGS)
-
-$(LIBPROJECT): $(OBJ)
-	$(A) $(AFLAGS) $@ $^
-
-$(PROJECT): main.o $(LIBPROJECT)
-	$(CXX) -o $@ main.o $(LDXXFLAGS)
-
-
-$(TESTPROJECT): $(LIBPROJECT) $(TEST-OBJ)
-	$(CXX) -o $@ $(TEST-OBJ) $(LDGTESTFLAGS)
-
-test: $(TESTPROJECT)
+.PHONY: all clean cleanall test run_tests
 
 all: $(PROJECT)
 
-.PHONY: clean
+$(PROJECT): $(OBJ)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+%.o: %.cpp
+	$(CXX) -c $< -o $@ $(CXXFLAGS)
+
+test: $(OBJ_NO_MAIN) $(TEST_OBJ)
+	$(CXX) -o $(TEST_PROJECT) $^ $(LDFLAGS) -lgtest -lgtest_main
+
+run_tests: test
+	./$(TEST_PROJECT)
 
 clean:
-	rm -f *.o
+	rm -f *.o parallel/*.o bmp/*.o tests/*.o *~ core
 
 cleanall: clean
-	rm -f $(PROJECT)
-	rm -f $(LIBPROJECT)
-	rm -f $(TESTPROJECT)
+	rm -f $(PROJECT) $(TEST_PROJECT)

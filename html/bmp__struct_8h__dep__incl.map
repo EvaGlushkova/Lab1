@@ -1,0 +1,8 @@
+<map id="bmp/bmp_struct.h" name="bmp/bmp_struct.h">
+<area shape="rect" id="node1" title="BMP file structures and class definition." alt="" coords="167,5,307,32"/>
+<area shape="rect" id="node2" href="$bmp__file_8h.html" title="Header for BMP image processing functions." alt="" coords="13,80,136,107"/>
+<area shape="rect" id="node5" href="$bmp__struct_8cpp.html" title="Implementation of BMPfile class." alt="" coords="160,80,315,107"/>
+<area shape="rect" id="node6" href="$bmp__parallel_8h_source.html" title=" " alt="" coords="339,80,511,107"/>
+<area shape="rect" id="node3" href="$bmp__file_8cpp.html" title="Implementation of BMP image processing functions." alt="" coords="5,155,144,181"/>
+<area shape="rect" id="node4" href="$bmp__parallel_8cpp.html" title="Implementation of BMPParallelService class for parallel image processing." alt="" coords="249,155,436,181"/>
+</map>
